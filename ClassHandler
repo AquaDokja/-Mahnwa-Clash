@@ -1,0 +1,96 @@
+local SS = game:GetService("ServerScriptService")
+local RS = game:GetService("ReplicatedStorage")
+
+local ClassHandler = {}
+
+function ClassHandler.EquipClass(player, char, class)
+	if not player or not char or not class then
+		warn("Missing parameters.")
+		return
+	end
+	
+	local Class = RS:FindFirstChild("Classes")
+	if not Class then return end
+	
+	if not Class:FindFirstChild(class.Name) then
+		warn(class.Name .. "wasn't found in ReplicatedStorage!")
+		return
+	end
+	
+	local classFolder = char:FindFirstChild("CLASS")
+	if not classFolder then
+		classFolder = Instance.new("Folder", char)
+		classFolder.Name = "CLASS"
+	end
+	
+	if #classFolder:GetChildren() > 0 then
+		warn("The Class: " .. classFolder:GetChildren()[1].Name .. " have already a Class!")
+		return
+	end
+	
+	local classClone = Class[class.Name]:Clone()
+	classClone.Parent = classFolder
+	
+	local function cloneAndWeldParts(sourcePart, targetPart)
+		for _, part in ipairs(sourcePart:GetChildren()) do
+			 if part:IsA("BasePart") then
+					local correspondingPart = targetPart:FindFirstChild(part.Name)
+					if correspondingPart then 
+						local classPartClone = part:Clone()
+						classPartClone.Parent = correspondingPart
+						classPartClone.CFrame = correspondingPart.CFrame
+						
+						local weld = Instance.new("WeldConstraint")
+						weld.Part0 = correspondingPart
+						weld.Part1 = classPartClone
+						weld.Parent = correspondingPart
+					end
+			 elseif part:IsA("Model") then
+					local correspondingPart = targetPart:FindFirstChild(part.Name)
+					if correspondingPart then
+						cloneAndWeldParts(part, correspondingPart)
+					end
+			 end
+		end
+	end
+	
+	cloneAndWeldParts(classClone, char)
+	
+	
+	if not classFolder:FindFirstChild(class.Name) then
+		local value = Instance.new("StringValue", classFolder)
+		value.Name = class.Name
+	end
+	
+	-- Animation
+	-- Sounds
+	
+	warn(class.Name .. " equipped to " .. char.Name)
+	
+	
+end
+
+function ClassHandler.UnequipAll(player, char)
+	if player and char then
+		local classFolder = char:FindFirstChild("CLASS")
+		if classFolder then
+			local className = classFolder:FindFirstChildWhichIsA("Folder")
+			
+			-- Animation
+			-- Sound
+			
+			for _, child in char:GetChildren() do
+				for _, secondChild in child:GetChildren() do
+						if secondChild.Name == child.Name then
+							secondChild:Destroy()
+						end
+				end
+			end
+			
+			warn("The Class: " ..className.Name.." was successfully destroyed!")
+			className:Destroy()
+		end
+	end
+end
+
+return ClassHandler
