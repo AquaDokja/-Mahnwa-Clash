@@ -1,0 +1,26 @@
+local SS = game:GetService("ServerScriptService")
+local RS = game:GetService("ReplicatedStorage")
+
+local ClassModule = require(SS.ClassHandler)
+
+local Classes = RS.Classes
+local Remotes = RS.Remotes
+
+game.Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(char)
+		local ClassFolder = Instance.new("Folder", char)
+		ClassFolder.Name = "Class"
+	end)
+end)
+
+Remotes.ClassEquip.OnServerEvent:Connect(function(player, class)
+	local char = player.Character
+	
+	ClassModule.EquipClass(player, char, class)
+end)
+
+Remotes.ClassUnequipAll.OnServerEvent:Connect(function(player)
+	local char = player.Character
+
+	ClassModule.UnequipAll(player, char)
+end)
