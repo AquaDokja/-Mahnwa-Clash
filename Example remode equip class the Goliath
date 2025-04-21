@@ -1,0 +1,3 @@
+script.Parent.MouseButton1Click:Connect(function() -- on click
+	game.ReplicatedStorage.Remotes.ClassEquip:FireServer(game.ReplicatedStorage.Classes["The Goliath"]) -- fire the remote to the server
+end)
