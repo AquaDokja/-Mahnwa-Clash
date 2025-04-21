@@ -1,0 +1,5 @@
+local AnimationsConfig = {
+	RolledClass = 0, -- put here the Animation number . need to be your own animation because of the permition
+}
+
+return AnimationsConfig
