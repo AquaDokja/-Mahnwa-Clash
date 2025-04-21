@@ -3,23 +3,45 @@ local RS = game:GetService("ReplicatedStorage")
 
 local ClassModule = require(SS.ClassHandler)
 
+local AnimationsConfig = require(RS.AnimationsConfig)
+local SoundsConfig = require(RS.SoundsConfig)
+
 local Classes = RS.Classes
 local Remotes = RS.Remotes
 
-game.Players.PlayerAdded:Connect(function(player)
+game.Players.PlayerAdded:Connect(function(player) -- initialize character data
 	player.CharacterAdded:Connect(function(char)
-		local ClassFolder = Instance.new("Folder", char)
+		local Animator = char:WaitForChild("Humanoid").Animator 
+		
+		for name, id in pairs(AnimationsConfig) do --preload animation
+			local anim = Instance.new("Animation")
+			anim.AnimationId = "rdxassetid://"..tostring(id)
+			
+			local animationTrack = Animator:LoadAnimation(anim)
+			
+			print("loaded animation: "..name)
+		end
+		
+		local ClassFolder = Instance.new("Folder", char) -- creates a folder for the class system
 		ClassFolder.Name = "Class"
+		
+		local ClassSound = Instance.new("Sound", char:WaitForChild("HumanoidRootPart")) -- creates a sound for the class
+		ClassSound.Name = "ClassSound"
+		ClassSound.RollOffMinDistance = 1
+		ClassSound.RollOffMaxDistance = 0
+		ClassSound.Looped = true
+		ClassSound.Volume = 0
+		ClassSound.TimePosition = 0
 	end)
 end)
 
-Remotes.ClassEquip.OnServerEvent:Connect(function(player, class)
+Remotes.ClassEquip.OnServerEvent:Connect(function(player, class) -- Equips the class for the player
 	local char = player.Character
 	
 	ClassModule.EquipClass(player, char, class)
 end)
 
-Remotes.ClassUnequipAll.OnServerEvent:Connect(function(player)
+Remotes.ClassUnequipAll.OnServerEvent:Connect(function(player) -- unequips all classes for the player
 	local char = player.Character
 
 	ClassModule.UnequipAll(player, char)
