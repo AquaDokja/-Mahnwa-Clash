@@ -1,0 +1,9 @@
+local SoundsConfig = {
+	RolledClass = {
+		SoundID = 0, -- put here ur own sounds id
+		Volume = 1,
+		Distance = 50,
+	}
+}
+
+return SoundsConfig
