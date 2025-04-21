@@ -1,9 +1,78 @@
 local SS = game:GetService("ServerScriptService")
 local RS = game:GetService("ReplicatedStorage")
 
-local ClassHandler = {}
+local AnimationsConfig = require(RS.AnimationsConfig)
+local SoundsConfig = require(RS.SoundsConfig)
 
-function ClassHandler.EquipClass(player, char, class)
+local ClassHandler = {}
+local activeAnimations = {}
+
+local function hasAnimation(classname) -- Checks if the class has an animation, if it does it returns true and the animation id, if it doesn't it returns false
+	local animationId = AnimationsConfig[classname]
+	if animationId then
+		return true, animationId
+	else
+		return false
+	end
+end
+
+local function hasSound(classname) -- Checks if the class has a sound, if it does it returns true and the sound data, if it doesn't it returns false
+	if SoundsConfig[classname] ~= nil then
+		local soundID, volume, distance = SoundsConfig[classname].SoundID, SoundsConfig[classname].Volume, SoundsConfig[classname].Distance
+		if soundID and volume and distance then
+			return true, soundID, volume, distance
+		else
+			return false
+		end
+	end
+end
+
+local function Animation(player, char, class) -- Checks if the class has an animation, if it does it plays it, if it doesn't it returns
+	local result, animationId = hasAnimation(class.Name)
+	if result then
+		warn(class.Name.." has an Animation")
+		
+		local humanoid = char:FindFirstChildOfClass("Humanoid")
+		if not humanoid then
+			warn("No Humanoid found for: "..char.Name)
+			return
+		end
+		
+		local animator = humanoid:FindFirstChildOfClass("Animator")
+		if not animator then
+			animator = Instance.new("Animator")
+			animator.Parent = humanoid
+		end
+		
+		local animation = Instance.new("Animation")
+		animation.AnimationId = "rbassetid://"..tostring(animationId)
+		local animationTrack = animator:LoadAnimation(animation)
+		animationTrack:Play()
+		
+		if not activeAnimations[player.UserId] then
+			activeAnimations[player.UserId] = {}
+		end
+		activeAnimations[player.UserId][class.Name] = animationTrack
+	else
+		warn("No Animation found for:"..class.Name)
+	end
+end
+
+local function Sound(player, char, class) -- Checks if the class has a sound, if it does it plays it, if it doesn't it returns
+	local result, soundID, volume, distance = hasSound(class.Name)
+	if result then
+		local SoundInstance = char:FindFirstChild("HumanoidRootPart"):FindFirstChild("ClassSound")
+		if not SoundInstance or not SoundInstance:IsA("Sound") then return end
+		
+		SoundInstance.SoundId = "rbxassetid://"..soundID
+		SoundInstance.RollOffMaxDistance = distance
+		SoundInstance.Volume = volume
+		SoundInstance.Playing = true
+	end
+end
+
+function ClassHandler.EquipClass(player, char, class) -- Equips the class for the player
+	
 	if not player or not char or not class then
 		warn("Missing parameters.")
 		return
@@ -31,7 +100,7 @@ function ClassHandler.EquipClass(player, char, class)
 	local classClone = Class[class.Name]:Clone()
 	classClone.Parent = classFolder
 	
-	local function cloneAndWeldParts(sourcePart, targetPart)
+	local function cloneAndWeldParts(sourcePart, targetPart) -- Clones the parts from the class and welds them to the target part
 		for _, part in ipairs(sourcePart:GetChildren()) do
 			 if part:IsA("BasePart") then
 					local correspondingPart = targetPart:FindFirstChild(part.Name)
@@ -62,22 +131,33 @@ function ClassHandler.EquipClass(player, char, class)
 		value.Name = class.Name
 	end
 	
-	-- Animation
-	-- Sounds
+	Animation(player, char, {Name = class.Name})
+	Sound(player, char, {Name = class.Name})
 	
 	warn(class.Name .. " equipped to " .. char.Name)
 	
-	
 end
 
-function ClassHandler.UnequipAll(player, char)
+function ClassHandler.UnequipAll(player, char) --Unequips all the classes from the player
 	if player and char then
 		local classFolder = char:FindFirstChild("CLASS")
 		if classFolder then
 			local className = classFolder:FindFirstChildWhichIsA("Folder")
 			
-			-- Animation
-			-- Sound
+			if activeAnimations[player.UserId] then
+				for className, animationTrack in pairs(activeAnimations[player.UserId]) do
+					animationTrack:Stop()
+				end
+				activeAnimations[player.UserId] = nil
+			end
+			
+			local SoundInstance = char:FindFirstChild("HumanoidRootPart"):FindFirstChild("ClassSound")
+			if SoundInstance then
+				SoundInstance.SoundId = ""
+				SoundInstance.RollOffMaxDistance = 0
+				SoundInstance.Volume = 0
+				SoundInstance.TimePosition = 0
+			end
 			
 			for _, child in char:GetChildren() do
 				for _, secondChild in child:GetChildren() do
