@@ -1,0 +1,10 @@
+local Players = game:GetService("Players")
+
+Players.PlayerAdded:Connect(function(player) -- When a player joins the game
+    player.CharacterAdded:Connect(function(character) -- When a player reloads/respawns
+        local classFolder = Instance.new("Folder") -- Creating a folder
+        classFolder.Name = "CLASS"
+        classFolder.Parent = character
+    end)
+end)
+
