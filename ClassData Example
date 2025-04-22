@@ -1,0 +1,25 @@
+local ClassData = {}
+
+ClassData.Classes = { -- [Class Name] = {Chance of getting the class} 
+	{Name = "The Goliath", Chance = 50},
+	{Name = "The Archer", Chance = 40},
+	{Name = "The Gunner", Chance = 30},
+	{Name = "The Magician", Chance = 40},
+	{Name = "The Farmer", Chance = 30},
+	{Name = "The Scientist", Chance = 20},
+	{Name = "The Leader", Chance = 30},
+	{Name = "The Mysterious", Chance = 10},
+	{Name = "The Dark", Chance = 10},
+	{Name = "The Light", Chance = 10},
+	{Name = "The Sun", Chance = 5},
+	{Name = "The Moon", Chance = 5},
+	{Name = "The Sky", Chance = 5},
+	{Name = "RolledClass", Chance = 5},
+}
+
+return ClassData
+
+
+The ChooseClass function is designed to select a class from a list of classes based on weighted probabilities. The weight is determined by the inverse of a Chance value associated with each class. This means that classes with a lower Chance value have a higher probability of being selected.
+
+also jekleiner die zahl desto hoeher die chance
