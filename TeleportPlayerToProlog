@@ -1,0 +1,12 @@
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local teleportEvent = ReplicatedStorage:WaitForChild("TeleportToProlog")
+
+local PROLOG_PLACE_ID = 74133441014245 -- Replace with the actual Prolog place ID
+
+Players.PlayerAdded:Connect(function(player)
+    -- Directly teleport the player to the Prolog place every time they join
+    TeleportService:Teleport(PROLOG_PLACE_ID, player)
+end)
