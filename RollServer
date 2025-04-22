@@ -15,7 +15,7 @@ local function ChooseClass(classes) --
 	end
 	
 	local randonEntry = math.random() -- Random number between 0 and 1
-	-- Determine the class based on the random number
+	-- Loop through the classes again to determine the class based on the random number
 	local cumulativeEntry = 0
 	
 	for _, class in pairs(classes) do --
@@ -26,7 +26,7 @@ local function ChooseClass(classes) --
 		end
 	end
 end
-
+--
 local function updateRolls(player) -- Update player's rolls eigendlich unnoetig
 	local profile = dataManager.Profiles[player] 
 	if not profile then return end
@@ -58,11 +58,14 @@ RollEvent.OnServerEvent:Connect(function(player) -- Server-side logic
 		SkipButton.MouseButton1Click:Connect(function() -- Player chose to skip
 			print("Skipped")
 			
-			frame.Visible = false
+			frame.Visible = false -- Hide the frame
+			return
 		end)
 		
 		EquipButton.MouseButton1Click:Connect(function() -- Player chose to equip the class
 			print("Equipped")
+			
+			frame.Visible = false -- Hide the frame
 			
 			if  player.Character:FindFirstChild("CLASS") then
 				if player.Character:WaitForChild("CLASS"):FindFirstChildWhichIsA("Folder") then
@@ -85,8 +88,6 @@ RollEvent.OnServerEvent:Connect(function(player) -- Server-side logic
 					OfferLabel.Text = "You got an Offer: "
 				end
 			end
-			
-			frame.Visible = false
 			
 			return
 		end)
