@@ -8,6 +8,10 @@ function module:Create(player: Player, profile) -- Player and profile.Data are e
 	local rolls = Instance.new("IntValue", leaderstats) -- creating a new "rolls" IntValue
 	rolls.Name = "Rolls"
 	rolls.Value = profile.Data.Rolls
+	
+	local playtime = Instance.new("IntValue", leaderstats) -- creating a new "Playtime" IntValue
+	playtime.Name = "Playtime"
+	playtime.Value = profile.Data.Playtime
 end
 
 return module
