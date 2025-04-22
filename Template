@@ -1,0 +1,8 @@
+local template = { -- all the data will follow the same template
+	Playtime = 0, -- in minutes
+	JoinTime = 0,
+	LeavingTime = 0,
+	Rolls = 0,
+}
+
+return template
