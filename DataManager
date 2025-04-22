@@ -1,0 +1,55 @@
+local Players = game:GetService("Players")
+local ServerScriptService = game:GetService("ServerScriptService")
+local modules = ServerScriptService:WaitForChild("Modules")
+
+local ProfileServer = require(modules:WaitForChild("ProfileService"))
+local template = require(script:WaitForChild("Template"))
+local leaderstats = require(script:WaitForChild("Leaderstats"))
+
+local dataKey = "_DataStore"
+local profileStore = ProfileServer.GetProfileStore(dataKey, template)
+
+local dataManager = {}
+dataManager.Profiles = {}
+
+local function PlayerAdded(player: Player) -- loads in the profile for the player and creates leaderstats
+	--print("PlayerAdded", player)
+	local profile = profileStore:LoadProfileAsync("Player_"..player.UserId)
+	
+	if profile ~= nil then
+		profile:AddUserID(player.UserId)
+		profile.Reconcile() 
+		
+		profile:ListenToRelease(function()
+			dataManager.Profiles[player] = nil
+			player:Kick()
+		end)
+		
+		if player:IsDescendantOf(Players) then
+			dataManager.Profiles[player] = profile
+			leaderstats:Create(player, profile)
+		else
+			profile:Release()
+		end
+	else
+		player:Kick()
+	end
+end
+
+local function PlayerRemoving(player: Player) --releases the profile of the player
+	local profile = dataManager.Profiles[player]
+	
+	if profile ~= nil then
+		profile:Release()
+	end
+end
+
+for _, player in Players:GetPlayers() do --if the game suddenly stops, it will load in the profiles that are currently in the game
+	
+	task.spawn(PlayerAdded, player)
+end
+
+Players.PlayerAdded:Connect(PlayerAdded) -- Listeners for PlayerAdded and PlayerRemoving
+Players.PlayerRemoving:Connect(PlayerRemoving) 
+
+return dataManager
