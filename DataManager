@@ -2,12 +2,12 @@ local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local modules = ServerScriptService:WaitForChild("Modules")
 
-local ProfileServer = require(modules:WaitForChild("ProfileService"))
+local ProfileService = require(modules:WaitForChild("ProfileService")) -- Corrected require path assuming ProfileService is directly under Modules
 local template = require(script:WaitForChild("Template"))
 local leaderstats = require(script:WaitForChild("Leaderstats"))
 
 local dataKey = "_DataStore"
-local profileStore = ProfileServer.GetProfileStore(dataKey, template)
+local profileStore = ProfileService.GetProfileStore(dataKey, template)
 
 local dataManager = {}
 dataManager.Profiles = {}
@@ -17,22 +17,24 @@ local function PlayerAdded(player: Player) -- loads in the profile for the playe
 	local profile = profileStore:LoadProfileAsync("Player_"..player.UserId)
 	
 	if profile ~= nil then
-		profile:AddUserID(player.UserId)
-		profile.Reconcile() 
+		-- Removed profile:AddUserID(player.UserId) as it's not a standard ProfileService method
+		profile:Reconcile() -- Make sure data structure is up to date
 		
 		profile:ListenToRelease(function()
 			dataManager.Profiles[player] = nil
-			player:Kick()
+			-- Consider removing the kick or adding a reason, depends on game design
+			player:Kick("Your data profile was released.") 
 		end)
 		
 		if player:IsDescendantOf(Players) then
 			dataManager.Profiles[player] = profile
 			leaderstats:Create(player, profile)
 		else
-			profile:Release()
+			profile:Release() -- Release profile if player left before loading finished
 		end
 	else
-		player:Kick()
+		-- Failed to load profile, kick player
+		player:Kick("Failed to load your data. Please rejoin.")
 	end
 end
 
@@ -44,12 +46,25 @@ local function PlayerRemoving(player: Player) --releases the profile of the play
 	end
 end
 
-for _, player in Players:GetPlayers() do --if the game suddenly stops, it will load in the profiles that are currently in the game
-	
+-- Load profiles for players already in the game
+for _, player in Players:GetPlayers() do 
 	task.spawn(PlayerAdded, player)
 end
 
-Players.PlayerAdded:Connect(PlayerAdded) -- Listeners for PlayerAdded and PlayerRemoving
+-- Connect listeners for new players joining and players leaving
+Players.PlayerAdded:Connect(PlayerAdded) 
 Players.PlayerRemoving:Connect(PlayerRemoving) 
 
+-- Handle game closing to release all profiles
+game:BindToClose(function()
+	-- Optional: Add short delay for pending writes
+	task.wait(2) 
+	for player, profile in dataManager.Profiles do
+		if profile then
+			profile:Release()
+		end
+	end
+end)
+
 return dataManager
+
