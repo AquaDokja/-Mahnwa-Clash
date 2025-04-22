@@ -1,0 +1,94 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Players = game:GetService("Players")
+local RollEvent = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("RollEvent")
+local ClassDataModule = require(ReplicatedStorage:WaitForChild("ClassData"))
+
+local dataManager = require(ServerScriptService:WaitForChild("Modules"):WaitForChild("DataManager"))
+local ClassHandler = require(game.ServerScriptService.ClassHandler)
+
+local function ChooseClass(classes) --
+	local totalEntries = 0
+	for _, class in pairs(classes) do --
+		-- Accumulate the inverse of chance
+		totalEntries += 1 / class.Chance
+	end
+	
+	local randonEntry = math.random() -- Random number between 0 and 1
+	-- Determine the class based on the random number
+	local cumulativeEntry = 0
+	
+	for _, class in pairs(classes) do --
+		-- Accumulate the inverse of chance
+		cumulativeEntry += 1 / class.Chance / totalEntries
+		if randonEntry <= cumulativeEntry then
+			return class
+		end
+	end
+end
+
+local function updateRolls(player) -- Update player's rolls eigendlich unnoetig
+	local profile = dataManager.Profiles[player] 
+	if not profile then return end
+	
+	profile.Data.Rolls = (profile.Data.Rolls or 0) + 1
+	player.leaderstats.Rolls.Value = profile.Data.Rolls
+end
+
+RollEvent.OnServerEvent:Connect(function(player) -- Server-side logic
+	local selectedClass = ChooseClass(ClassDataModule.Classes) -- Select a class
+	
+	local class = selectedClass -- Get the class data for the selected class
+	if class then
+		warn(class.Name)
+		local playerGui = player:WaitForChild("PlayerGui")
+		local frame = playerGui.ScreenGui.GambleWindowOpen.GambleWindow.ChooseFrame
+		local SkipButton = frame.Skip
+		local EquipButton = frame.Equip
+		local OfferLabel = frame.OfferLabel
+		
+		if frame.Visible == true then return end
+		
+		updateRolls(player)
+		
+		OfferLabel.Text = "You got an offer: " .. tostring(class.Name)
+		
+		frame.Visible = true
+		
+		SkipButton.MouseButton1Click:Connect(function() -- Player chose to skip
+			print("Skipped")
+			
+			frame.Visible = false
+		end)
+		
+		EquipButton.MouseButton1Click:Connect(function() -- Player chose to equip the class
+			print("Equipped")
+			
+			if  player.Character:FindFirstChild("CLASS") then
+				if player.Character:WaitForChild("CLASS"):FindFirstChildWhichIsA("Folder") then
+					ClassHandler.UnequipAll(player, player.Character)
+					
+					wait(0) -- Wait for a short period to allow unequipping to finish
+					
+					local className = class.Name -- Get the class name
+					
+					warn(className)
+					
+					ClassHandler.EquipClass(player, player.Character, ReplicatedStorage.Classes[className]) -- Equip the selected class
+					
+					OfferLabel.Text = "You got an Offer: "
+				else
+					local className = class.Name
+					
+					ClassHandler.EquipClass(player, player.Character, ReplicatedStorage.Classes[className])
+					
+					OfferLabel.Text = "You got an Offer: "
+				end
+			end
+			
+			frame.Visible = false
+			
+			return
+		end)
+	end
+end)
