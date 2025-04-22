@@ -1,0 +1,13 @@
+local module = {}
+
+function module:Create(player: Player, profile) -- Player and profile.Data are essential for the script to function properly. (other variables are not required)
+	local leaderstats = Instance.new("Folder") -- creating a new "leaderstats" folder
+	leaderstats.Name = "leaderstats"
+	leaderstats.Parent = player
+	
+	local rolls = Instance.new("IntValue", leaderstats) -- creating a new "rolls" IntValue
+	rolls.Name = "Rolls"
+	rolls.Value = profile.Data.Rolls
+end
+
+return module
